@@ -67,10 +67,6 @@ function App() {
     fetch('https://app.axiomprotect.com:7877/similarity_check', requestOptions)
       .then((response) => response.text())
       .then((result) => {
-        addToast(`(${result.header}) Response Recieved`, {
-          appearance: 'success',
-          autoDismiss: true,
-        });
         try {
           result = JSON.parse(result);
           if (result['error code'] === 0) {
@@ -112,9 +108,12 @@ function App() {
             setreqSent(false);
             setcard_type('');
           }, 5000);
-
           console.log(error);
         }
+        addToast(`Response Recieved`, {
+          appearance: 'info',
+          autoDismiss: true,
+        });
       })
       .catch((error) => {
         // Error 😨
