@@ -104,9 +104,8 @@ function App() {
             }
             setresponse('');
             setpic('data:image/png;base64, ');
-            setfile([]);
             setreqSent(false);
-            setcard_type('');
+            setcard_type('aadhar');
           }, 5000);
           console.log(error);
         }
