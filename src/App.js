@@ -4,12 +4,7 @@ import React from 'react';
 import { useToasts } from 'react-toast-notifications';
 import Loader from './Loader';
 
-const options = [
-  { value: 'passport', label: 'Passport' },
-  { value: 'aadhar', label: 'Aadhar Card' },
-  { value: 'malaysian_id', label: 'Malaysian ID card' },
-  { value: 'mongolian', label: 'Mongolian ID card' },
-];
+const options = [{ value: 'aadhar', label: 'Aadhar Card' }];
 
 function App() {
   const { addToast } = useToasts();
@@ -29,6 +24,8 @@ function App() {
     //clear response data
     setresponse('');
     setpic('data:image/png;base64, ');
+    settabNos(1);
+    setcard_type(null);
 
     // do some validations
     // make sure adequate data is provided
@@ -48,11 +45,6 @@ function App() {
       });
 
       // this is if all checks pass
-    } else {
-      addToast('Data Sent to Backend', {
-        appearance: 'success',
-        autoDismiss: true,
-      });
     }
 
     var formdata = new FormData();
@@ -65,9 +57,13 @@ function App() {
       redirect: 'follow',
     };
 
-    fetch('http://demo.axiomprotect.com:7875/similarity_check', requestOptions)
+    fetch('https://app.axiomprotect.com:7877/similarity_check', requestOptions)
       .then((response) => response.text())
       .then((result) => {
+        addToast('Response Recieved', {
+          appearance: 'success',
+          autoDismiss: true,
+        });
         result = JSON.parse(result);
 
         if (result['error code'] === 0) {
@@ -77,15 +73,15 @@ function App() {
             errorCode: result['error code'],
             similarity: result.similarity,
           });
-        } else return;
+        }
       })
       .catch((error) => console.log('error', error));
   };
 
   return (
-    <div className='xl:mx-80 lg:mx-64 md:mx-32 sm:mx-5 mx-0 my-20'>
+    <div className='lg:mx-40 md:mx-32 sm:mx-5 mx-0 my-20'>
       <div className='text-center text-6xl my-16 text-purple-500'>
-        AI Document Verify Demo
+        AI Document Check Demo
       </div>
       <ul className='flex border-b'>
         <li className=''>
@@ -127,12 +123,24 @@ function App() {
             className='my-8'
             placeholder='Select ID Card Type'
           />
-          <button
-            onClick={handleClick}
-            className='w-full mr-2 block text-center py-2 hover:bg-purple-600 bg-purple-500 text-xl font-bold text-white rounded-lg'
-          >
-            Submit
-          </button>
+          <div className='flex'>
+            <button
+              onClick={handleClick}
+              className='w-full mr-2 block text-center py-2 hover:bg-purple-600 bg-purple-500 text-xl font-bold text-white rounded-lg'
+            >
+              Submit
+            </button>
+            <button
+              onClick={() => {
+                setresponse('');
+                setpic('data:image/png;base64, ');
+                setfile([]);
+              }}
+              className='w-full mr-2 block text-center py-2 hover:bg-gray-600 bg-gray-400 text-xl font-bold text-white rounded-lg'
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 
@@ -150,7 +158,7 @@ function App() {
               <img className='h-full' src={pic} alt='' />
             </div>
             <div className='w-1/2 h-full'>
-              <div className='text-left text-2xl bg-blue-50 min-h-full w-full text-center p-10'>
+              <div className='text-left text-xl bg-blue-50 min-h-full w-full text-center p-10'>
                 <div className='w-full h-full'>
                   <pre className='text-left'>
                     {JSON.stringify(response, 3, '  ')}
@@ -164,6 +172,7 @@ function App() {
           onClick={() => {
             setresponse('');
             setpic('data:image/png;base64, ');
+            setfile([]);
           }}
           className='w-full mt-5 mr-2 block text-center py-2 hover:bg-purple-600 bg-purple-500 text-xl font-bold text-white rounded-lg'
         >
