@@ -8,11 +8,12 @@ const options = [{ value: 'aadhar', label: 'Aadhar Card' }];
 
 function App() {
   const { addToast } = useToasts();
-  const [card_type, setcard_type] = React.useState(null);
+  const [card_type, setcard_type] = React.useState('aadhar');
   const [file, setfile] = React.useState([]);
   const [response, setresponse] = React.useState('');
   const [pic, setpic] = React.useState('data:image/png;base64,');
   const [tabNos, settabNos] = React.useState(0);
+  const [reqSent, setreqSent] = React.useState(false);
 
   const activeTabClass =
     'bg-white inline-block bg-purple-100 border-l border-t border-r rounded-t py-2 px-14 text-blue-dark font-semibold';
@@ -22,6 +23,7 @@ function App() {
   // execute when Submit button is clicked
   const handleClick = () => {
     //clear response data
+    setreqSent(true);
     setresponse('');
     setpic('data:image/png;base64, ');
     settabNos(1);
@@ -45,6 +47,11 @@ function App() {
       });
 
       // this is if all checks pass
+    } else {
+      addToast('Requesting Server for Response', {
+        appearance: 'success',
+        autoDismiss: true,
+      });
     }
 
     var formdata = new FormData();
@@ -60,22 +67,87 @@ function App() {
     fetch('https://app.axiomprotect.com:7877/similarity_check', requestOptions)
       .then((response) => response.text())
       .then((result) => {
-        addToast('Response Recieved', {
+        addToast(`(${result.header}) Response Recieved`, {
           appearance: 'success',
           autoDismiss: true,
         });
-        result = JSON.parse(result);
+        try {
+          result = JSON.parse(result);
+          if (result['error code'] === 0) {
+            setpic((prev) => prev + result.d_skew_image);
+            setresponse({
+              blurriness: result.blurriness,
+              errorCode: result['error code'],
+              similarity: result.similarity,
+            });
+          }
+        } catch (error) {
+          // Error 😨
+          setTimeout(() => {
+            if (error.response) {
+              /*
+               * The request was made and the server responded with a
+               * status code that falls out of the range of 2xx
+               */
+              addToast(`${error.response.status} A Server Error has Occured`, {
+                appearance: 'error',
+                autoDismiss: true,
+              });
+            } else if (error.request) {
+              addToast(`${error.response.status} No response from Server`, {
+                appearance: 'error',
+                autoDismiss: true,
+              });
+            } else {
+              // Something happened in setting up the request and triggered an Error
+              console.log('Error', error.message);
+              addToast(`Server Error Occured`, {
+                appearance: 'error',
+                autoDismiss: true,
+              });
+            }
+            setresponse('');
+            setpic('data:image/png;base64, ');
+            setfile([]);
+            setreqSent(false);
+            setcard_type('');
+          }, 5000);
 
-        if (result['error code'] === 0) {
-          setpic((prev) => prev + result.d_skew_image);
-          setresponse({
-            blurriness: result.blurriness,
-            errorCode: result['error code'],
-            similarity: result.similarity,
-          });
+          console.log(error);
         }
       })
-      .catch((error) => console.log('error', error));
+      .catch((error) => {
+        // Error 😨
+        setTimeout(() => {
+          if (error.response) {
+            /*
+             * The request was made and the server responded with a
+             * status code that falls out of the range of 2xx
+             */
+            addToast(`${error.response.status} A Server Error has Occured`, {
+              appearance: 'error',
+              autoDismiss: true,
+            });
+          } else if (error.request) {
+            addToast(`${error.response.status} No response from Server`, {
+              appearance: 'error',
+              autoDismiss: true,
+            });
+          } else {
+            // Something happened in setting up the request and triggered an Error
+            console.log('Error', error.message);
+            addToast(`Server Error Occured`, {
+              appearance: 'error',
+              autoDismiss: true,
+            });
+          }
+          setresponse('');
+          setpic('data:image/png;base64, ');
+          setfile([]);
+          setreqSent(false);
+          setcard_type('');
+        });
+      });
   };
 
   return (
@@ -135,6 +207,8 @@ function App() {
                 setresponse('');
                 setpic('data:image/png;base64, ');
                 setfile([]);
+                setreqSent(false);
+                setcard_type('');
               }}
               className='w-full mr-2 block text-center py-2 hover:bg-gray-600 bg-gray-400 text-xl font-bold text-white rounded-lg'
             >
@@ -145,22 +219,30 @@ function App() {
       </div>
 
       {/*Tab 2*/}
-      <div className={tabNos === 0 ? 'h-96 w-full hidden' : 'h-96 w-full'}>
+      <div className={tabNos === 0 ? ' w-full hidden' : ' w-full'}>
         <br />
         <br />
         {response === '' ? (
-          <div className='flex h-96 bg-blue-50 w-full'>
-            <Loader />
-          </div>
-        ) : (
-          <div className='flex w-full h-full'>
-            <div className='w-1/2 bg-green-100 h-full'>
-              <img className='h-full' src={pic} alt='' />
+          reqSent ? (
+            <div className='flex h-full bg-blue-50 w-full'>
+              <Loader />
             </div>
-            <div className='w-1/2 h-full'>
-              <div className='text-left text-xl bg-blue-50 min-h-full w-full text-center p-10'>
+          ) : (
+            <div className='flex h-full bg-blue-50 w-full justify-center text-center align-center'>
+              <h2 className='text-gray-500 text-xl py-48'>
+                Please make an API call
+              </h2>
+            </div>
+          )
+        ) : (
+          <div className='block lg:flex w-full h-full'>
+            <div className='lg:w-1/2 bg-green-100 h-full'>
+              <img className='h-96 mx-auto' src={pic} alt='' />
+            </div>
+            <div className='lg:w-1/2'>
+              <div className='text-left text-xl h-full bg-blue-50 w-full text-center p-10'>
                 <div className='w-full h-full'>
-                  <pre className='text-left'>
+                  <pre className='text-left h-full overflow-clip bg-blue-50'>
                     {JSON.stringify(response, 3, '  ')}
                   </pre>
                 </div>
@@ -173,6 +255,7 @@ function App() {
             setresponse('');
             setpic('data:image/png;base64, ');
             setfile([]);
+            setreqSent(false);
           }}
           className='w-full mt-5 mr-2 block text-center py-2 hover:bg-purple-600 bg-purple-500 text-xl font-bold text-white rounded-lg'
         >
