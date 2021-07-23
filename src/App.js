@@ -69,13 +69,10 @@ function App() {
       .then((result) => {
         try {
           result = JSON.parse(result);
+          console.log(result);
           if (result['error code'] === 0) {
             setpic((prev) => prev + result.d_skew_image);
-            setresponse({
-              blurriness: result.blurriness,
-              errorCode: result['error code'],
-              similarity: result.similarity,
-            });
+            setresponse(result);
           }
         } catch (error) {
           // Error 😨
@@ -233,14 +230,14 @@ function App() {
             </div>
           )
         ) : (
-          <div className='block lg:flex w-full h-full'>
-            <div className='lg:w-1/2 bg-green-100 h-full'>
-              <img className='h-96 mx-auto' src={pic} alt='' />
+          <div className='block lg:flex w-full  bg-green-100 h-full py-auto'>
+            <div className='lg:w-1/2 my-auto h-full'>
+              <img className='h-96 mx-auto py-auto' src={pic} alt='' />
             </div>
             <div className='lg:w-1/2'>
               <div className='text-left text-xl h-full bg-blue-50 w-full text-center p-10'>
                 <div className='w-full h-full'>
-                  <pre className='text-left h-full overflow-clip bg-blue-50'>
+                  <pre className='text-left h-full overflow-clip bg-blue-50 overflow-x-auto'>
                     {JSON.stringify(response, 3, '  ')}
                   </pre>
                 </div>
